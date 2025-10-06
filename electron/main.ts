@@ -65,3 +65,11 @@ ipcMain.handle('import-files', async (event, filePaths) => {
 ipcMain.handle('list-files', async () => {
   return listFiles();
 });
+
+ipcMain.handle('start-drag', async (event, filePath) => {
+  const iconPath = path.join(app.getAppPath(), 'assets', 'icon.png');
+  event.sender.startDrag({
+    file: filePath,
+    icon: iconPath
+  });
+});

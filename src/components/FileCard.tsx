@@ -19,8 +19,13 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    window.sonexa.startDrag(file.path);
+  };
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+    <div draggable onDragStart={handleDragStart} className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between cursor-pointer">
       <div>
         <h3 className="font-bold">{file.filename}</h3>
         <p className="text-sm text-gray-500">{formatDuration(file.duration)} - {formatSize(file.size)}</p>

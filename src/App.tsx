@@ -14,6 +14,7 @@ declare global {
       setSupabaseKey: (key: string) => Promise<void>;
       importFiles: (filePaths: string[]) => Promise<any[]>;
       listFiles: () => Promise<any[]>;
+      startDrag: (filePath: string) => Promise<void>;
     };
   }
 }
