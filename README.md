@@ -10,3 +10,13 @@ To run the app in development mode:
 npm install
 npm run dev
 ```
+
+## Building
+
+To build the application for production, run the following command:
+
+```bash
+npm run package
+```
+
+This will create a `.dmg` file in the `release` directory.
