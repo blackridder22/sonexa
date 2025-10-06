@@ -15,6 +15,7 @@ declare global {
       importFiles: (filePaths: string[]) => Promise<any[]>;
       listFiles: () => Promise<any[]>;
       startDrag: (filePath: string) => Promise<void>;
+      uploadFile: (file: any) => Promise<any>;
     };
   }
 }

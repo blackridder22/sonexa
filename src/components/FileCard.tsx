@@ -24,6 +24,13 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
     window.sonexa.startDrag(file.path);
   };
 
+  const handleUpload = () => {
+    window.sonexa.uploadFile(file).then(() => {
+      // Refresh file list or update UI
+      document.dispatchEvent(new CustomEvent('files-imported'));
+    });
+  };
+
   return (
     <div draggable onDragStart={handleDragStart} className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between cursor-pointer">
       <div>
@@ -35,9 +42,13 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
           ))}
         </div>
       </div>
-      <div>
-        {file.cloud_url && (
+      <div className="flex items-center space-x-4">
+        {file.cloud_url ? (
           <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+        ) : (
+          <button onClick={handleUpload} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Upload
+          </button>
         )}
       </div>
     </div>

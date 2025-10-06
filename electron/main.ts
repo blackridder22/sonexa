@@ -2,8 +2,9 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { createMenu } = require('./menu');
 const { getSettings, setSettings, getSupabaseKey, setSupabaseKey } = require('./settings');
-const { initDatabase, insertFile, listFiles } = require('../native/db');
+const { initDatabase, insertFile, listFiles, updateFileCloudUrl } = require('../native/db');
 const { importFiles } = require('../native/storage');
+const { uploadFile } = require('../native/supabase');
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
@@ -72,4 +73,15 @@ ipcMain.handle('start-drag', async (event, filePath) => {
     file: filePath,
     icon: iconPath
   });
+});
+
+ipcMain.handle('upload-file', async (event, file) => {
+  const settings = getSettings();
+  const supabaseKey = await getSupabaseKey();
+  if (!settings.supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase URL or key not configured.');
+  }
+  const result = await uploadFile(settings.supabaseUrl, supabaseKey, file);
+  updateFileCloudUrl(file.id, result.publicUrl, result.path);
+  return result;
 });

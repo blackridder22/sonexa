@@ -37,3 +37,8 @@ export function listFiles() {
   const stmt = db.prepare('SELECT * FROM files');
   return stmt.all();
 }
+
+export function updateFileCloudUrl(id: string, cloudUrl: string, cloudId: string) {
+  const stmt = db.prepare('UPDATE files SET cloud_url = ?, cloud_id = ?, updated_at = ? WHERE id = ?');
+  stmt.run(cloudUrl, cloudId, new Date().toISOString(), id);
+}
