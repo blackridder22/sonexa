@@ -7,6 +7,7 @@ const ImportDropzone: React.FC = () => {
     window.sonexa.importFiles(filePaths).then((importedFiles) => {
       console.log('Imported files:', importedFiles);
       // Here you can add a toast notification
+      document.dispatchEvent(new CustomEvent('files-imported'));
     });
   }, []);
 

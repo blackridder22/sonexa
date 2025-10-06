@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SettingsModal from './components/SettingsModal';
 import Sidebar from './components/Sidebar';
 import FileList from './components/FileList';
+import Player from './components/Player';
 
 declare global {
   interface Window {
@@ -20,6 +21,7 @@ declare global {
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
+  const [currentFile, setCurrentFile] = useState(null);
 
   useEffect(() => {
     window.sonexa.onOpenSettings(() => {
@@ -34,7 +36,8 @@ function App() {
       </header>
       <div className="flex flex-grow overflow-hidden">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <FileList activeTab={activeTab} />
+        <FileList activeTab={activeTab} onFileSelect={setCurrentFile} />
+        <Player file={currentFile} />
       </div>
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>

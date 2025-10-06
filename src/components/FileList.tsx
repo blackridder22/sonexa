@@ -4,15 +4,24 @@ import ImportDropzone from './ImportDropzone';
 
 interface FileListProps {
   activeTab: string;
+  onFileSelect: (file: any) => void;
 }
 
-const FileList: React.FC<FileListProps> = ({ activeTab }) => {
+const FileList: React.FC<FileListProps> = ({ activeTab, onFileSelect }) => {
   const [files, setFiles] = useState<any[]>([]);
 
   useEffect(() => {
-    window.sonexa.listFiles().then((files) => {
-      setFiles(files);
-    });
+    const fetchFiles = () => {
+      window.sonexa.listFiles().then((files) => {
+        setFiles(files);
+      });
+    }
+    fetchFiles();
+
+    const handleFilesImported = () => fetchFiles();
+    // This is a bit of a hack, we should have a proper event system
+    document.addEventListener('files-imported', handleFilesImported);
+    return () => document.removeEventListener('files-imported', handleFilesImported);
   }, []);
 
   const filteredFiles = files.filter(file => {
@@ -31,7 +40,9 @@ const FileList: React.FC<FileListProps> = ({ activeTab }) => {
       </div>
       <div className="space-y-4">
         {filteredFiles.map(file => (
-          <FileCard key={file.id} file={file} />
+          <div key={file.id} onClick={() => onFileSelect(file)}>
+            <FileCard file={file} />
+          </div>
         ))}
       </div>
     </div>
