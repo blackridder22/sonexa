@@ -20,6 +20,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "electron-store": "^11.0.2",
+    "keytar": "^7.9.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

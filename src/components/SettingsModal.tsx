@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -6,6 +6,30 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const [localLibraryPath, setLocalLibraryPath] = useState('');
+  const [autoSync, setAutoSync] = useState(false);
+  const [supabaseUrl, setSupabaseUrl] = useState('');
+  const [supabaseKey, setSupabaseKey] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      window.sonexa.getSettings().then((settings) => {
+        setLocalLibraryPath(settings.localLibraryPath);
+        setAutoSync(settings.autoSync);
+        setSupabaseUrl(settings.supabaseUrl);
+      });
+      window.sonexa.getSupabaseKey().then((key) => {
+        setSupabaseKey(key || '');
+      });
+    }
+  }, [isOpen]);
+
+  const handleSave = () => {
+    window.sonexa.setSettings({ localLibraryPath, autoSync, supabaseUrl });
+    window.sonexa.setSupabaseKey(supabaseKey);
+    onClose();
+  };
+
   if (!isOpen) {
     return null;
   }
@@ -17,18 +41,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Supabase URL</label>
-            <input type="text" className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            <input type="text" value={supabaseUrl} onChange={(e) => setSupabaseUrl(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Supabase Key</label>
-            <input type="password" className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            <input type="password" value={supabaseKey} onChange={(e) => setSupabaseKey(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Local Library Path</label>
-            <input type="text" className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            <input type="text" value={localLibraryPath} onChange={(e) => setLocalLibraryPath(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
           </div>
           <div className="flex items-center">
-            <input type="checkbox" className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+            <input type="checkbox" checked={autoSync} onChange={(e) => setAutoSync(e.target.checked)} className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
             <label className="ml-2 block text-sm text-gray-900">Auto-sync</label>
           </div>
           <div>
@@ -37,9 +61,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
         </div>
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end space-x-4">
           <button onClick={onClose} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-            Close
+            Cancel
+          </button>
+          <button onClick={handleSave} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Save
           </button>
         </div>
       </div>

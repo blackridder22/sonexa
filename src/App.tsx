@@ -5,6 +5,10 @@ declare global {
   interface Window {
     sonexa: {
       onOpenSettings: (callback: () => void) => void;
+      getSettings: () => Promise<any>;
+      setSettings: (settings: any) => Promise<void>;
+      getSupabaseKey: () => Promise<string | null>;
+      setSupabaseKey: (key: string) => Promise<void>;
     };
   }
 }
