@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { createMenu } = require('./menu');
 const { getSettings, setSettings, getSupabaseKey, setSupabaseKey } = require('./settings');
-const { initDatabase, insertFile } = require('../native/db');
+const { initDatabase, insertFile, listFiles } = require('../native/db');
 const { importFiles } = require('../native/storage');
 
 function createWindow () {
@@ -60,4 +60,8 @@ ipcMain.handle('import-files', async (event, filePaths) => {
     insertFile(file);
   }
   return importedFiles;
+});
+
+ipcMain.handle('list-files', async () => {
+  return listFiles();
 });

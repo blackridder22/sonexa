@@ -32,3 +32,8 @@ export function insertFile(file: any) {
   `);
   stmt.run(file);
 }
+
+export function listFiles() {
+  const stmt = db.prepare('SELECT * FROM files');
+  return stmt.all();
+}

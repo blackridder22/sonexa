@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SettingsModal from './components/SettingsModal';
-import ImportDropzone from './components/ImportDropzone';
+import Sidebar from './components/Sidebar';
+import FileList from './components/FileList';
 
 declare global {
   interface Window {
@@ -11,12 +12,14 @@ declare global {
       getSupabaseKey: () => Promise<string | null>;
       setSupabaseKey: (key: string) => Promise<void>;
       importFiles: (filePaths: string[]) => Promise<any[]>;
+      listFiles: () => Promise<any[]>;
     };
   }
 }
 
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('All');
 
   useEffect(() => {
     window.sonexa.onOpenSettings(() => {
@@ -29,9 +32,10 @@ function App() {
       <header className="App-header p-4 border-b">
         <h1 className="text-xl font-bold">Sonexa — Dev</h1>
       </header>
-      <main className="flex-grow p-4">
-        <ImportDropzone />
-      </main>
+      <div className="flex flex-grow overflow-hidden">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <FileList activeTab={activeTab} />
+      </div>
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
