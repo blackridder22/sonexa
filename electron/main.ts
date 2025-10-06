@@ -1,5 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const { createMenu } = require('./menu');
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
@@ -9,6 +10,8 @@ function createWindow () {
       preload: path.join(__dirname, 'preload.js')
     }
   });
+
+  createMenu(mainWindow);
 
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
