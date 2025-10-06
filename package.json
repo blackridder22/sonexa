@@ -20,14 +20,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "better-sqlite3": "^12.4.1",
     "electron-store": "^11.0.2",
     "keytar": "^7.9.0",
+    "music-metadata": "^11.9.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-dropzone": "^14.3.8",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.0",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
     "electron": "^38.2.1",

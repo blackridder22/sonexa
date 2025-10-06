@@ -2,13 +2,16 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { createMenu } = require('./menu');
 const { getSettings, setSettings, getSupabaseKey, setSupabaseKey } = require('./settings');
+const { initDatabase, insertFile } = require('../native/db');
+const { importFiles } = require('../native/storage');
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: false // Required for local file access
     }
   });
 
@@ -22,6 +25,7 @@ function createWindow () {
 }
 
 app.whenReady().then(() => {
+  initDatabase();
   createWindow();
 
   app.on('activate', function () {
@@ -47,4 +51,13 @@ ipcMain.handle('get-supabase-key', async () => {
 
 ipcMain.handle('set-supabase-key', async (event, key) => {
   await setSupabaseKey(key);
+});
+
+ipcMain.handle('import-files', async (event, filePaths) => {
+  const settings = getSettings();
+  const importedFiles = await importFiles(filePaths, settings.localLibraryPath);
+  for (const file of importedFiles) {
+    insertFile(file);
+  }
+  return importedFiles;
 });

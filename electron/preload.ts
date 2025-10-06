@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('sonexa', {
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
   getSupabaseKey: () => ipcRenderer.invoke('get-supabase-key'),
   setSupabaseKey: (key) => ipcRenderer.invoke('set-supabase-key', key),
+  importFiles: (filePaths) => ipcRenderer.invoke('import-files', filePaths),
 });
