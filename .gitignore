@@ -32,3 +32,4 @@ yarn-error.log*
 # electron
 .electron
 electron-builder-debug.yml
+.gemini
