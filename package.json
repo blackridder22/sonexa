@@ -8,7 +8,10 @@
     "start-electron": "tsc-watch -p tsconfig.node.json --onSuccess \"electron .\"",
     "build:renderer": "vite build",
     "build:electron": "tsc -p tsconfig.node.json",
-    "package": "npm run build:renderer && npm run build:electron && electron-builder"
+    "package": "npm run build:renderer && npm run build:electron && electron-builder",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "test": "jest"
   },
   "keywords": [
     "electron",
@@ -47,15 +50,23 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/howler": "^2.2.12",
+    "@types/jest": "^30.0.0",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.0",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
     "electron": "^38.2.1",
     "electron-builder": "^26.0.12",
+    "eslint": "^9.37.0",
+    "eslint-plugin-react": "^7.37.5",
+    "jest": "^30.2.0",
     "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4.1.14",
+    "ts-jest": "^29.4.4",
     "tsc-watch": "^7.2.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.9"
