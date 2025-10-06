@@ -2,12 +2,14 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { createMenu } = require('./menu');
 const { getSettings, setSettings, getSupabaseKey, setSupabaseKey } = require('./settings');
-const { initDatabase, insertFile, listFiles, updateFileCloudUrl } = require('../native/db');
-const { importFiles } = require('../native/storage');
+const { initDatabase, insertFile, listFiles, updateFileCloudUrl, deleteAllFiles, getLocalFilesToUpload } = require('../native/db');
+const { importFiles, deleteLibrary } = require('../native/storage');
 const { uploadFile } = require('../native/supabase');
 
+let mainWindow;
+
 function createWindow () {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -32,6 +34,28 @@ app.whenReady().then(() => {
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  // Auto-sync worker
+  setInterval(async () => {
+    const settings = getSettings();
+    if (settings.autoSync) {
+      const filesToUpload = getLocalFilesToUpload();
+      if (filesToUpload.length > 0) {
+        const supabaseKey = await getSupabaseKey();
+        if (settings.supabaseUrl && supabaseKey) {
+          for (const file of filesToUpload) {
+            try {
+              const result = await uploadFile(settings.supabaseUrl, supabaseKey, file);
+              updateFileCloudUrl(file.id, result.publicUrl, result.path);
+            } catch (error) {
+              console.error('Failed to upload file:', error);
+            }
+          }
+          mainWindow.webContents.send('files-synced');
+        }
+      }
+    }
+  }, 5 * 60 * 1000); // 5 minutes
 });
 
 app.on('window-all-closed', function () {
@@ -84,4 +108,10 @@ ipcMain.handle('upload-file', async (event, file) => {
   const result = await uploadFile(settings.supabaseUrl, supabaseKey, file);
   updateFileCloudUrl(file.id, result.publicUrl, result.path);
   return result;
+});
+
+ipcMain.handle('delete-cache', async () => {
+  const settings = getSettings();
+  deleteLibrary(settings.localLibraryPath);
+  deleteAllFiles();
 });

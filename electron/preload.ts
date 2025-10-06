@@ -10,4 +10,6 @@ contextBridge.exposeInMainWorld('sonexa', {
   listFiles: () => ipcRenderer.invoke('list-files'),
   startDrag: (filePath) => ipcRenderer.invoke('start-drag', filePath),
   uploadFile: (file) => ipcRenderer.invoke('upload-file', file),
+  deleteCache: () => ipcRenderer.invoke('delete-cache'),
+  onFilesSynced: (callback) => ipcRenderer.on('files-synced', callback),
 });

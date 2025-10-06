@@ -42,3 +42,12 @@ export function updateFileCloudUrl(id: string, cloudUrl: string, cloudId: string
   const stmt = db.prepare('UPDATE files SET cloud_url = ?, cloud_id = ?, updated_at = ? WHERE id = ?');
   stmt.run(cloudUrl, cloudId, new Date().toISOString(), id);
 }
+
+export function deleteAllFiles() {
+  db.exec('DELETE FROM files');
+}
+
+export function getLocalFilesToUpload() {
+  const stmt = db.prepare('SELECT * FROM files WHERE cloud_url IS NULL');
+  return stmt.all();
+}

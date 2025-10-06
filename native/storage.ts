@@ -57,3 +57,9 @@ export async function importFiles(files: string[], libraryPath: string = default
 
   return importedFiles;
 }
+
+export function deleteLibrary(libraryPath: string = defaultLibraryPath) {
+  if (fs.existsSync(libraryPath)) {
+    fs.rmSync(libraryPath, { recursive: true, force: true });
+  }
+}

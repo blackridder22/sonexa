@@ -16,6 +16,8 @@ declare global {
       listFiles: () => Promise<any[]>;
       startDrag: (filePath: string) => Promise<void>;
       uploadFile: (file: any) => Promise<any>;
+      deleteCache: () => Promise<void>;
+      onFilesSynced: (callback: () => void) => void;
     };
   }
 }
@@ -28,6 +30,11 @@ function App() {
   useEffect(() => {
     window.sonexa.onOpenSettings(() => {
       setIsSettingsOpen(true);
+    });
+
+    window.sonexa.onFilesSynced(() => {
+      alert('Files synced successfully!');
+      document.dispatchEvent(new CustomEvent('files-imported'));
     });
   }, []);
 

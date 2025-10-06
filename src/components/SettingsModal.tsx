@@ -56,7 +56,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <label className="ml-2 block text-sm text-gray-900">Auto-sync</label>
           </div>
           <div>
-            <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+            <button onClick={() => {
+              if (window.confirm('Are you sure you want to delete the cache? This action cannot be undone.')) {
+                window.sonexa.deleteCache().then(() => {
+                  document.dispatchEvent(new CustomEvent('files-imported'));
+                });
+              }
+            }} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
               Delete Cache
             </button>
           </div>
