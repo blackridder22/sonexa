@@ -1,3 +1,4 @@
+jest.mock('electron');
 import { importFiles, deleteLibrary } from '../native/storage';
 import fs from 'fs';
 import path from 'path';

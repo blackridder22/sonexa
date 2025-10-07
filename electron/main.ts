@@ -24,10 +24,10 @@ function createWindow () {
     // Relax CSP for development
     mainWindow.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
-        callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' data:; script-src \'self\' \'unsafe-eval\' http://localhost:5173; connect-src \'self\' http://localhost:5173'] } })
+        callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' data:; script-src \'self\' \'unsafe-eval\' http://localhost:3000; connect-src \'self\' http://localhost:3000'] } })
       }
     );
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../index.html'));
