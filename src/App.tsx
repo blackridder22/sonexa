@@ -1,54 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import SettingsModal from './components/SettingsModal';
-import Sidebar from './components/Sidebar';
-import FileList from './components/FileList';
-import Player from './components/Player';
-
-declare global {
-  interface Window {
-    sonexa: {
-      onOpenSettings: (callback: () => void) => void;
-      getSettings: () => Promise<any>;
-      setSettings: (settings: any) => Promise<void>;
-      getSupabaseKey: () => Promise<string | null>;
-      setSupabaseKey: (key: string) => Promise<void>;
-      importFiles: (filePaths: string[]) => Promise<any[]>;
-      listFiles: () => Promise<any[]>;
-      startDrag: (filePath: string) => Promise<void>;
-      uploadFile: (file: any) => Promise<any>;
-      deleteCache: () => Promise<void>;
-      onFilesSynced: (callback: () => void) => void;
-    };
-  }
-}
+import React from 'react';
 
 function App() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('All');
-  const [currentFile, setCurrentFile] = useState(null);
-
-  useEffect(() => {
-    window.sonexa.onOpenSettings(() => {
-      setIsSettingsOpen(true);
-    });
-
-    window.sonexa.onFilesSynced(() => {
-      alert('Files synced successfully!');
-      document.dispatchEvent(new CustomEvent('files-imported'));
-    });
-  }, []);
-
   return (
-    <div className="App h-screen flex flex-col">
-      <header className="App-header p-4 border-b">
-        <h1 className="text-xl font-bold">Sonexa — Dev</h1>
-      </header>
-      <div className="flex flex-grow overflow-hidden">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <FileList activeTab={activeTab} onFileSelect={setCurrentFile} />
-        <Player file={currentFile} />
-      </div>
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+    <div style={{ backgroundColor: 'black', color: 'white', height: '100vh', width: '100vw', padding: '20px' }}>
+      <h1>Hello from Sonexa!</h1>
+      <p>If you can see this, the React app is rendering correctly.</p>
     </div>
   );
 }

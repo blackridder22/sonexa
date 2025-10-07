@@ -5,7 +5,7 @@
   "main": "dist/electron/main.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"npm:start-electron\"",
-    "start-electron": "tsc-watch -p tsconfig.node.json --onSuccess \"electron .\"",
+    "start-electron": "tsc-watch -p tsconfig.node.json --onSuccess \"cross-env NODE_ENV=development electron .\"",
     "build:renderer": "vite build",
     "build:electron": "tsc -p tsconfig.node.json",
     "package": "npm run build:renderer && npm run build:electron && electron-builder",
@@ -58,6 +58,7 @@
     "@typescript-eslint/parser": "^8.46.0",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "electron": "^38.2.1",
     "electron-builder": "^26.0.12",
     "eslint": "^9.37.0",

@@ -2,8 +2,6 @@ import { app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { parseFile } from 'music-metadata';
-import { v4 as uuidv4 } from 'uuid';
 
 const defaultLibraryPath = path.join(app.getPath('home'), 'SonexaLibrary');
 
@@ -22,6 +20,9 @@ function ensureLibraryPath(libraryPath: string) {
 }
 
 export async function importFiles(files: string[], libraryPath: string = defaultLibraryPath) {
+  const { parseFile } = await import('music-metadata');
+  const { v4: uuidv4 } = await import('uuid');
+
   ensureLibraryPath(libraryPath);
 
   const importedFiles = [];

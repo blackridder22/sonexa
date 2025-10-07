@@ -21,7 +21,14 @@ function createWindow () {
   createMenu(mainWindow);
 
   if (process.env.NODE_ENV === 'development') {
+    // Relax CSP for development
+    mainWindow.webContents.session.webRequest.onHeadersReceived(
+      (details, callback) => {
+        callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' data:; script-src \'self\' \'unsafe-eval\' http://localhost:5173; connect-src \'self\' http://localhost:5173'] } })
+      }
+    );
     mainWindow.loadURL('http://localhost:5173');
+    mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../index.html'));
   }
