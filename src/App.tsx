@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import SettingsModal from './components/SettingsModal';
 import Sidebar from './components/Sidebar';
 import FileList from './components/FileList';
+import Player from './components/Player';
 import { FileRecord } from './components/FileCard';
 
 function App() {
@@ -9,6 +10,7 @@ function App() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [files, setFiles] = useState<FileRecord[]>([]);
     const [selectedFile, setSelectedFile] = useState<FileRecord | null>(null);
+    const [playingFile, setPlayingFile] = useState<FileRecord | null>(null);
     const [activeTab, setActiveTab] = useState<'all' | 'music' | 'sfx' | 'favorites'>('all');
 
     // Load files from database
@@ -49,6 +51,11 @@ function App() {
     // Keyboard shortcut handler
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if typing in input
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+
             // CMD+, for settings
             if ((e.metaKey || e.ctrlKey) && e.key === ',') {
                 e.preventDefault();
@@ -71,11 +78,15 @@ function App() {
         };
     };
 
-    // Handle file play (will be implemented in T6)
+    // Handle file play
     const handlePlayFile = (file: FileRecord) => {
-        console.log('Play file:', file.filename);
+        setPlayingFile(file);
         setSelectedFile(file);
-        // T6 will implement actual playback
+    };
+
+    // Handle player close
+    const handleClosePlayer = () => {
+        setPlayingFile(null);
     };
 
     return (
@@ -96,7 +107,7 @@ function App() {
             </div>
 
             {/* Main content area */}
-            <main className="flex h-[calc(100vh-3rem)]">
+            <main className={`flex ${playingFile ? 'h-[calc(100vh-3rem-5.5rem)]' : 'h-[calc(100vh-3rem)]'}`}>
                 {/* Sidebar */}
                 <Sidebar
                     activeTab={activeTab}
@@ -115,6 +126,12 @@ function App() {
                     />
                 </div>
             </main>
+
+            {/* Audio Player */}
+            <Player
+                file={playingFile}
+                onClose={handleClosePlayer}
+            />
 
             {/* Settings Modal */}
             <SettingsModal
