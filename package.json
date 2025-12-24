@@ -14,20 +14,23 @@
         "package": "npm run build && electron-builder"
     },
     "dependencies": {
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "howler": "^2.2.4",
+        "@supabase/supabase-js": "^2.39.0",
         "better-sqlite3": "^9.2.2",
         "electron-store": "^8.1.0",
+        "howler": "^2.2.4",
         "keytar": "^7.9.0",
-        "@supabase/supabase-js": "^2.39.0"
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "uuid": "^13.0.0"
     },
     "devDependencies": {
+        "@types/better-sqlite3": "^7.6.8",
+        "@types/howler": "^2.2.11",
         "@types/node": "^20.10.0",
         "@types/react": "^18.2.45",
         "@types/react-dom": "^18.2.17",
-        "@types/howler": "^2.2.11",
-        "@types/better-sqlite3": "^7.6.8",
+        "@types/uuid": "^10.0.0",
+        "@vitejs/plugin-react": "^4.2.1",
         "autoprefixer": "^10.4.16",
         "concurrently": "^8.2.2",
         "electron": "^28.0.0",
@@ -36,7 +39,6 @@
         "tailwindcss": "^3.3.6",
         "typescript": "^5.3.3",
         "vite": "^5.0.10",
-        "@vitejs/plugin-react": "^4.2.1",
         "wait-on": "^7.2.0"
     },
     "build": {

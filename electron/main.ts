@@ -3,6 +3,8 @@ import path from 'path';
 import { createApplicationMenu } from './menu';
 import { getSettings, setSettings, AppSettings } from './settings';
 import { getSecret, setSecret, deleteSecret } from './secrets';
+import { initDatabase, insertFile, getAllFiles, getFilesByType, getFileByHash, deleteAllFiles, FileRecord } from '../native/db';
+import { isAudioFile, detectFileType, copyFileToLibrary, getAudioMetadata, clearLibrary } from '../native/storage';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -41,6 +43,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    // Initialize database
+    initDatabase();
+
     createWindow();
 
     app.on('activate', () => {
@@ -105,6 +110,92 @@ ipcMain.handle('choose-directory', async () => {
     return result.filePaths[0];
 });
 
+// ============================================
+// File Import Handlers
+// ============================================
+
+// Import files from paths
+ipcMain.handle('import-files', async (_event, filePaths: string[]) => {
+    const results: { success: FileRecord[]; failed: string[]; duplicates: string[] } = {
+        success: [],
+        failed: [],
+        duplicates: [],
+    };
+
+    for (const sourcePath of filePaths) {
+        try {
+            // Check if it's an audio file
+            if (!isAudioFile(sourcePath)) {
+                results.failed.push(sourcePath);
+                continue;
+            }
+
+            // Get metadata first to check for duplicates
+            const metadata = await getAudioMetadata(sourcePath);
+
+            // Check for duplicate by hash
+            const existing = getFileByHash(metadata.hash);
+            if (existing) {
+                results.duplicates.push(sourcePath);
+                continue;
+            }
+
+            // Detect file type (music or sfx)
+            const originalFilename = path.basename(sourcePath);
+            const fileType = detectFileType(originalFilename);
+
+            // Copy file to library
+            const { destPath, filename } = await copyFileToLibrary(sourcePath, fileType);
+
+            // Insert into database
+            const record = insertFile({
+                filename: originalFilename,
+                type: fileType,
+                path: destPath,
+                hash: metadata.hash,
+                duration: metadata.duration,
+                size: metadata.size,
+                tags: '[]',
+                bpm: null,
+                cloud_url: null,
+                cloud_id: null,
+            });
+
+            results.success.push(record);
+
+            // Notify renderer of progress
+            if (mainWindow) {
+                mainWindow.webContents.send('import-progress', {
+                    current: results.success.length + results.failed.length + results.duplicates.length,
+                    total: filePaths.length,
+                    filename: originalFilename,
+                });
+            }
+        } catch (error) {
+            console.error('Failed to import file:', sourcePath, error);
+            results.failed.push(sourcePath);
+        }
+    }
+
+    return results;
+});
+
+// List all files
+ipcMain.handle('list-files', (_event, type?: 'music' | 'sfx') => {
+    if (type) {
+        return getFilesByType(type);
+    }
+    return getAllFiles();
+});
+
+// Delete cache (files + database)
+ipcMain.handle('delete-cache', async () => {
+    const filesDeleted = await clearLibrary();
+    const recordsDeleted = deleteAllFiles();
+    return { filesDeleted, recordsDeleted };
+});
+
 // Export mainWindow for menu access
 export { mainWindow };
+
 
