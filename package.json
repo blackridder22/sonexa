@@ -6,10 +6,55 @@
     "author": "Sonexa Team",
     "license": "MIT",
     "scripts": {
-        "dev": "echo 'Install dependencies first: npm install'",
-        "build:renderer": "echo 'To be configured with Vite'",
-        "build:electron": "echo 'To be configured with tsc'",
-        "package": "echo 'To be configured with electron-builder'"
+        "dev": "concurrently -k \"vite\" \"npm run electron:dev\"",
+        "electron:dev": "wait-on http://localhost:5173 && electron .",
+        "build:renderer": "vite build",
+        "build:electron": "tsc -p tsconfig.electron.json",
+        "build": "npm run build:renderer && npm run build:electron",
+        "package": "npm run build && electron-builder"
+    },
+    "dependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "howler": "^2.2.4",
+        "better-sqlite3": "^9.2.2",
+        "electron-store": "^8.1.0",
+        "keytar": "^7.9.0",
+        "@supabase/supabase-js": "^2.39.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "@types/react": "^18.2.45",
+        "@types/react-dom": "^18.2.17",
+        "@types/howler": "^2.2.11",
+        "@types/better-sqlite3": "^7.6.8",
+        "autoprefixer": "^10.4.16",
+        "concurrently": "^8.2.2",
+        "electron": "^28.0.0",
+        "electron-builder": "^24.9.1",
+        "postcss": "^8.4.32",
+        "tailwindcss": "^3.3.6",
+        "typescript": "^5.3.3",
+        "vite": "^5.0.10",
+        "@vitejs/plugin-react": "^4.2.1",
+        "wait-on": "^7.2.0"
+    },
+    "build": {
+        "appId": "com.sonexa.app",
+        "productName": "Sonexa",
+        "mac": {
+            "category": "public.app-category.music",
+            "target": [
+                "dmg"
+            ]
+        },
+        "files": [
+            "dist/**/*",
+            "dist-electron/**/*"
+        ],
+        "directories": {
+            "output": "build"
+        }
     },
     "keywords": [
         "electron",
