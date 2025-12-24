@@ -1,0 +1,26 @@
+{
+    "name": "sonexa",
+    "version": "0.1.0",
+    "description": "Private audio library for Music & SFX with local storage and cloud sync",
+    "main": "dist-electron/main.js",
+    "author": "Sonexa Team",
+    "license": "MIT",
+    "scripts": {
+        "dev": "echo 'Install dependencies first: npm install'",
+        "build:renderer": "echo 'To be configured with Vite'",
+        "build:electron": "echo 'To be configured with tsc'",
+        "package": "echo 'To be configured with electron-builder'"
+    },
+    "keywords": [
+        "electron",
+        "react",
+        "audio",
+        "library",
+        "music",
+        "sfx",
+        "supabase"
+    ],
+    "engines": {
+        "node": ">=18"
+    }
+}
