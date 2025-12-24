@@ -82,10 +82,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
 
     const handleDeleteCache = async () => {
-        // TODO: Implement cache deletion in T9
+        if (!window.sonexa) return;
+
         if (confirm('Are you sure you want to delete all cached files? This cannot be undone.')) {
-            console.log('Cache deleted');
-            // Will be implemented in T9
+            try {
+                const result = await window.sonexa.deleteCache();
+                alert(`Deleted ${result.filesDeleted} files and ${result.recordsDeleted} database records.`);
+                window.location.reload(); // Reload to refresh file list
+            } catch (error) {
+                console.error('Failed to delete cache:', error);
+                alert('Failed to delete cache. Please try again.');
+            }
         }
     };
 

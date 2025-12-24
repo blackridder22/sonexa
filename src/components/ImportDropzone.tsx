@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 
 interface ImportDropzoneProps {
     onImportComplete?: () => void;
+    forceType?: 'music' | 'sfx';
 }
 
 interface ImportProgress {
@@ -10,54 +11,46 @@ interface ImportProgress {
     filename: string;
 }
 
-export default function ImportDropzone({ onImportComplete }: ImportDropzoneProps) {
+export default function ImportDropzone({ onImportComplete, forceType }: ImportDropzoneProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [progress, setProgress] = useState<ImportProgress | null>(null);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    }, []);
 
     const handleDrop = useCallback(async (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
 
-        if (!window.sonexa) return;
+        if (!window.sonexa) {
+            console.error('Sonexa API not available');
+            return;
+        }
 
+        // Get file paths from drop event
         const files = Array.from(e.dataTransfer.files);
-        const filePaths = files.map((f) => (f as File & { path: string }).path).filter(Boolean);
+        const filePaths = files
+            .map((file) => (file as File & { path: string }).path)
+            .filter(Boolean);
 
-        if (filePaths.length === 0) return;
+        if (filePaths.length === 0) {
+            console.warn('No valid file paths found');
+            return;
+        }
 
         setIsImporting(true);
         setProgress({ current: 0, total: filePaths.length, filename: '' });
 
         try {
-            const result = await window.sonexa.importFiles(filePaths);
+            const result = await window.sonexa.importFiles(filePaths, forceType);
 
             console.log('Import results:', result);
 
-            // Show completion message
-            const successCount = result.success.length;
-            const duplicateCount = result.duplicates.length;
-            const failedCount = result.failed.length;
+            if (result.failed.length > 0) {
+                console.warn('Some files failed to import:', result.failed);
+            }
 
-            if (successCount > 0 || duplicateCount > 0 || failedCount > 0) {
-                let message = '';
-                if (successCount > 0) message += `${successCount} file(s) imported. `;
-                if (duplicateCount > 0) message += `${duplicateCount} duplicate(s) skipped. `;
-                if (failedCount > 0) message += `${failedCount} failed.`;
-                console.log(message);
+            if (result.duplicates.length > 0) {
+                console.info('Duplicate files skipped:', result.duplicates);
             }
 
             onImportComplete?.();
@@ -67,109 +60,108 @@ export default function ImportDropzone({ onImportComplete }: ImportDropzoneProps
             setIsImporting(false);
             setProgress(null);
         }
-    }, [onImportComplete]);
+    }, [onImportComplete, forceType]);
+
+    const handleBrowse = async () => {
+        if (!window.sonexa) return;
+
+        const filePaths = await window.sonexa.chooseFiles();
+        if (filePaths.length === 0) return;
+
+        setIsImporting(true);
+        setProgress({ current: 0, total: filePaths.length, filename: '' });
+
+        try {
+            const result = await window.sonexa.importFiles(filePaths, forceType);
+            console.log('Import results:', result);
+            onImportComplete?.();
+        } catch (error) {
+            console.error('Import failed:', error);
+        } finally {
+            setIsImporting(false);
+            setProgress(null);
+        }
+    };
 
     return (
         <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             className={`
-        flex flex-col items-center justify-center h-full text-center
-        transition-all duration-300 rounded-2xl border-2 border-dashed
-        ${isDragging
+                h-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-300
+                ${isDragging
                     ? 'border-sonexa-primary bg-sonexa-primary/10 scale-[1.02]'
-                    : 'border-transparent'
+                    : 'border-sonexa-border hover:border-gray-600'
                 }
-        ${isImporting ? 'pointer-events-none opacity-70' : ''}
-      `}
+                ${isImporting ? 'pointer-events-none opacity-75' : ''}
+            `}
+            onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+            }}
+            onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+            }}
+            onDrop={handleDrop}
         >
             {isImporting ? (
-                <>
-                    <div className="w-16 h-16 rounded-full bg-sonexa-primary/20 flex items-center justify-center mb-4 animate-pulse">
-                        <svg
-                            className="w-8 h-8 text-sonexa-primary animate-spin"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                            />
-                            <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                        </svg>
+                <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 relative">
+                        <div className="absolute inset-0 rounded-full border-4 border-sonexa-border"></div>
+                        <div
+                            className="absolute inset-0 rounded-full border-4 border-sonexa-primary border-t-transparent animate-spin"
+                        ></div>
                     </div>
-                    <h2 className="text-xl font-semibold mb-2">Importing...</h2>
+                    <p className="text-lg font-medium text-white mb-2">
+                        Importing...
+                    </p>
                     {progress && (
-                        <p className="text-gray-400">
+                        <p className="text-sm text-gray-400">
                             {progress.current} / {progress.total} files
                         </p>
                     )}
-                </>
-            ) : isDragging ? (
-                <>
-                    <div className="w-24 h-24 rounded-2xl bg-sonexa-primary/20 flex items-center justify-center mb-6 animate-bounce">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-12 h-12 text-sonexa-primary"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-semibold mb-2 text-sonexa-primary">
-                        Drop files here
-                    </h2>
-                    <p className="text-gray-400">Release to import audio files</p>
-                </>
+                </div>
             ) : (
-                <>
-                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-sonexa-primary/20 to-sonexa-secondary/20 flex items-center justify-center mb-6">
+                <div className="text-center px-6">
+                    {/* Icon */}
+                    <div className={`
+                        w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center transition-all duration-300
+                        ${isDragging
+                            ? 'bg-sonexa-primary/20 scale-110'
+                            : 'bg-sonexa-surface'
+                        }
+                    `}>
                         <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-12 h-12 text-sonexa-primary"
+                            className={`w-10 h-10 transition-colors ${isDragging ? 'text-sonexa-primary' : 'text-gray-500'}`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                            />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-semibold mb-2">Welcome to Sonexa</h2>
-                    <p className="text-gray-400 max-w-md">
-                        Your private audio library for music and sound effects.
-                        <br />
-                        <span className="text-sonexa-primary font-medium">
-                            Drag audio files here to import
-                        </span>
-                        , or press{' '}
-                        <kbd className="px-2 py-1 bg-sonexa-surface rounded text-sm font-mono">
-                            CMD + ,
-                        </kbd>{' '}
-                        to configure settings.
+
+                    {/* Text */}
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                        {isDragging ? 'Drop to import' : 'Drop audio files here'}
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                        or
                     </p>
-                </>
+
+                    {/* Browse button */}
+                    <button
+                        onClick={handleBrowse}
+                        className="px-6 py-3 bg-sonexa-primary hover:bg-sonexa-primary/90 text-white font-medium rounded-xl transition-all duration-200 hover:scale-105"
+                    >
+                        Browse Files
+                    </button>
+
+                    <p className="text-xs text-gray-600 mt-6">
+                        Supports MP3, WAV, AIFF, FLAC, OGG, M4A
+                    </p>
+                </div>
             )}
         </div>
     );

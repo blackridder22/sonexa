@@ -2,7 +2,7 @@
     "name": "sonexa",
     "version": "0.1.0",
     "description": "Private audio library for Music & SFX with local storage and cloud sync",
-    "main": "dist-electron/main.js",
+    "main": "dist-electron/electron/main.js",
     "author": "Sonexa Team",
     "license": "MIT",
     "scripts": {
@@ -24,6 +24,7 @@
         "uuid": "^13.0.0"
     },
     "devDependencies": {
+        "@electron/rebuild": "^4.0.2",
         "@types/better-sqlite3": "^7.6.8",
         "@types/howler": "^2.2.11",
         "@types/node": "^20.10.0",

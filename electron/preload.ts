@@ -1,19 +1,20 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 // File type enum
-export type FileType = 'music' | 'sfx';
+export type FileType = 'music' | 'sfx' | 'favorites';
 
 // File record interface (matches native/db.ts)
 export interface FileRecord {
     id: string;
     filename: string;
-    type: FileType;
+    type: 'music' | 'sfx';
     path: string;
     hash: string;
     duration: number;
     size: number;
     tags: string;
     bpm: number | null;
+    favorite: number;
     created_at: string;
     updated_at: string;
     cloud_url: string | null;
@@ -33,6 +34,14 @@ export interface ImportResult {
     success: FileRecord[];
     failed: string[];
     duplicates: string[];
+}
+
+// File counts interface
+export interface FileCounts {
+    all: number;
+    music: number;
+    sfx: number;
+    favorites: number;
 }
 
 // Expose safe APIs to renderer
@@ -66,19 +75,63 @@ contextBridge.exposeInMainWorld('sonexa', {
 
     // File dialog
     chooseDirectory: (): Promise<string | null> => ipcRenderer.invoke('choose-directory'),
+    chooseFiles: (): Promise<string[]> => ipcRenderer.invoke('choose-files'),
 
     // File operations
     listFiles: (type?: FileType): Promise<FileRecord[]> => ipcRenderer.invoke('list-files', type),
-    importFiles: (paths: string[]): Promise<ImportResult> => ipcRenderer.invoke('import-files', paths),
+    importFiles: (paths: string[], forceType?: 'music' | 'sfx'): Promise<ImportResult> => ipcRenderer.invoke('import-files', paths, forceType),
+    deleteFiles: (fileIds: string[]): Promise<{ deleted: number }> => ipcRenderer.invoke('delete-files', fileIds),
+    deleteCloudFiles: (storagePaths: string[]): Promise<{ deleted: number }> => ipcRenderer.invoke('delete-cloud-files', storagePaths),
+    updateFile: (id: string, updates: { favorite?: number; tags?: string }): Promise<boolean> => ipcRenderer.invoke('update-file', id, updates),
+    getFileCounts: (): Promise<FileCounts> => ipcRenderer.invoke('get-file-counts'),
 
     // Cache management
     deleteCache: (): Promise<{ filesDeleted: number; recordsDeleted: number }> =>
         ipcRenderer.invoke('delete-cache'),
 
-    // Native drag (placeholder for T7)
-    startDrag: (filePath: string, iconPath: string): Promise<void> =>
-        ipcRenderer.invoke('start-drag', filePath, iconPath),
+    // Native drag to external apps
+    startDrag: (filePath: string): Promise<void> =>
+        ipcRenderer.invoke('start-drag', filePath),
+
+    // Supabase sync
+    uploadFile: (fileId: string): Promise<{ success: boolean; url: string }> =>
+        ipcRenderer.invoke('upload-file', fileId),
+    isSupabaseConfigured: (): Promise<boolean> =>
+        ipcRenderer.invoke('is-supabase-configured'),
+    getUnsyncedCount: (): Promise<number> =>
+        ipcRenderer.invoke('get-unsynced-count'),
+    triggerSync: (): Promise<{ synced: number; total: number; time: string }> =>
+        ipcRenderer.invoke('trigger-sync'),
+    startSyncWorker: (): Promise<{ status: string }> =>
+        ipcRenderer.invoke('start-sync-worker'),
+    stopSyncWorker: (): Promise<{ status: string }> =>
+        ipcRenderer.invoke('stop-sync-worker'),
+    onSyncComplete: (callback: (data: { synced: number; time: string }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, data: { synced: number; time: string }) => callback(data);
+        ipcRenderer.on('sync-complete', handler);
+        return () => ipcRenderer.removeListener('sync-complete', handler);
+    },
+
+    // Bi-directional sync
+    listCloudFiles: (type?: 'music' | 'sfx'): Promise<CloudFile[]> =>
+        ipcRenderer.invoke('list-cloud-files', type),
+    downloadCloudFile: (storagePath: string, fileType: 'music' | 'sfx'): Promise<{ success: boolean; filename: string }> =>
+        ipcRenderer.invoke('download-cloud-file', storagePath, fileType),
+    getSyncStatus: (): Promise<{ uploadNeeded: number; downloadNeeded: number; configured: boolean }> =>
+        ipcRenderer.invoke('get-sync-status'),
+    fullSync: (): Promise<{ uploaded: number; downloaded: number; time: string }> =>
+        ipcRenderer.invoke('full-sync'),
 });
+
+// Cloud file type
+interface CloudFile {
+    name: string;
+    id: string;
+    storagePath: string;
+    type: 'music' | 'sfx';
+    size: number;
+    updated_at: string;
+}
 
 // TypeScript type declarations
 declare global {
@@ -93,10 +146,28 @@ declare global {
             setSecret: (key: string, value: string) => Promise<{ success: boolean }>;
             deleteSecret: (key: string) => Promise<boolean>;
             chooseDirectory: () => Promise<string | null>;
+            chooseFiles: () => Promise<string[]>;
             listFiles: (type?: FileType) => Promise<FileRecord[]>;
-            importFiles: (paths: string[]) => Promise<ImportResult>;
+            importFiles: (paths: string[], forceType?: 'music' | 'sfx') => Promise<ImportResult>;
+            deleteFiles: (fileIds: string[]) => Promise<{ deleted: number }>;
+            deleteCloudFiles: (storagePaths: string[]) => Promise<{ deleted: number }>;
+            updateFile: (id: string, updates: { favorite?: number; tags?: string }) => Promise<boolean>;
+            getFileCounts: () => Promise<FileCounts>;
             deleteCache: () => Promise<{ filesDeleted: number; recordsDeleted: number }>;
-            startDrag: (filePath: string, iconPath: string) => Promise<void>;
+            startDrag: (filePath: string) => Promise<void>;
+            // Supabase sync
+            uploadFile: (fileId: string) => Promise<{ success: boolean; url: string }>;
+            isSupabaseConfigured: () => Promise<boolean>;
+            getUnsyncedCount: () => Promise<number>;
+            triggerSync: () => Promise<{ synced: number; total: number; time: string }>;
+            startSyncWorker: () => Promise<{ status: string }>;
+            stopSyncWorker: () => Promise<{ status: string }>;
+            onSyncComplete: (callback: (data: { synced: number; time: string }) => void) => () => void;
+            // Bi-directional sync
+            listCloudFiles: (type?: 'music' | 'sfx') => Promise<CloudFile[]>;
+            downloadCloudFile: (storagePath: string, fileType: 'music' | 'sfx') => Promise<{ success: boolean; filename: string }>;
+            getSyncStatus: () => Promise<{ uploadNeeded: number; downloadNeeded: number; configured: boolean }>;
+            fullSync: () => Promise<{ uploaded: number; downloaded: number; time: string }>;
         };
     }
 }
