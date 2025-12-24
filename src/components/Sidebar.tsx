@@ -10,10 +10,10 @@ interface SidebarProps {
 }
 
 const tabs = [
-    { id: 'all', label: 'All Files', icon: '📁' },
-    { id: 'music', label: 'Music', icon: '🎵' },
-    { id: 'sfx', label: 'SFX', icon: '🔊' },
-    { id: 'favorites', label: 'Favorites', icon: '⭐' },
+    { id: 'all', label: 'All Files', icon: '/icons/file.png' },
+    { id: 'music', label: 'Music', icon: '/icons/music.png' },
+    { id: 'sfx', label: 'SFX', icon: '/icons/sfx.png' },
+    { id: 'favorites', label: 'Favorites', icon: '/icons/star.png' },
 ] as const;
 
 export default function Sidebar({ activeTab, onTabChange, counts }: SidebarProps) {
@@ -47,7 +47,11 @@ export default function Sidebar({ activeTab, onTabChange, counts }: SidebarProps
                                 : 'text-gray-400 hover:bg-sonexa-surface/50 hover:text-white'
                             }`}
                     >
-                        <span className="text-lg">{tab.icon}</span>
+                        <img
+                            src={tab.icon}
+                            alt={tab.label}
+                            className="w-6 h-6 object-contain"
+                        />
                         <span className="flex-1 text-left font-medium">{tab.label}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === tab.id
                                 ? 'bg-sonexa-primary/20 text-sonexa-primary'
