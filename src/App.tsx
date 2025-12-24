@@ -1,13 +1,35 @@
 import { useState, useEffect } from 'react';
+import SettingsModal from './components/SettingsModal';
 
 function App() {
     const [appVersion, setAppVersion] = useState<string>('');
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
         // Get app version from Electron
         if (window.sonexa) {
             window.sonexa.getAppVersion().then(setAppVersion).catch(console.error);
+
+            // Listen for open-settings event from main process (CMD+,)
+            const unsubscribe = window.sonexa.onOpenSettings(() => {
+                setIsSettingsOpen(true);
+            });
+
+            return unsubscribe;
         }
+    }, []);
+
+    // Keyboard shortcut handler (backup for CMD+,)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+                e.preventDefault();
+                setIsSettingsOpen(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
     return (
@@ -75,6 +97,12 @@ function App() {
                     </div>
                 </div>
             </main>
+
+            {/* Settings Modal */}
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+            />
         </div>
     );
 }

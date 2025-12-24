@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
+import { createApplicationMenu } from './menu';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -21,6 +22,9 @@ function createWindow() {
             sandbox: false,
         },
     });
+
+    // Set up the application menu
+    createApplicationMenu(mainWindow);
 
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
