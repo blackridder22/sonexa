@@ -1,6 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { createApplicationMenu } from './menu';
+import { getSettings, setSettings, AppSettings } from './settings';
+import { getSecret, setSecret, deleteSecret } from './secrets';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -54,10 +56,55 @@ app.on('window-all-closed', () => {
     }
 });
 
+// ============================================
 // IPC Handlers
+// ============================================
+
+// App info
 ipcMain.handle('get-app-version', () => {
     return app.getVersion();
 });
 
+// Settings (electron-store)
+ipcMain.handle('get-settings', () => {
+    return getSettings();
+});
+
+ipcMain.handle('set-settings', (_event, settings: Partial<AppSettings>) => {
+    setSettings(settings);
+    return { success: true };
+});
+
+// Secrets (keytar)
+ipcMain.handle('get-secret', async (_event, key: string) => {
+    return await getSecret(key);
+});
+
+ipcMain.handle('set-secret', async (_event, key: string, value: string) => {
+    await setSecret(key, value);
+    return { success: true };
+});
+
+ipcMain.handle('delete-secret', async (_event, key: string) => {
+    return await deleteSecret(key);
+});
+
+// File dialog for choosing library path
+ipcMain.handle('choose-directory', async () => {
+    if (!mainWindow) return null;
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory', 'createDirectory'],
+        title: 'Choose Library Folder',
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+        return null;
+    }
+
+    return result.filePaths[0];
+});
+
 // Export mainWindow for menu access
 export { mainWindow };
+
