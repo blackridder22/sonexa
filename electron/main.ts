@@ -1,10 +1,12 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, nativeTheme } from 'electron';
 import path from 'path';
 import { createApplicationMenu } from './menu';
 import { getSettings, setSettings, AppSettings } from './settings';
 import { getSecret, setSecret, deleteSecret } from './secrets';
 import { initDatabase, insertFile, getAllFiles, getFilesByType, getFavorites, getFileByHash, getFileById, updateFile, deleteFile, deleteAllFiles, FileRecord } from '../native/db';
-import { isAudioFile, detectFileType, copyFileToLibrary, getAudioMetadata, clearLibrary } from '../native/storage';
+import { isAudioFile, detectFileType, copyFileToLibrary, getAudioMetadata, clearLibrary, initWorker } from '../native/storage';
+import { initSyncQueue, queueSyncOperation, getPendingItems, markProcessing, markCompleted, markFailed, getQueueStats, resetStuckItems, isQueued } from '../native/syncQueue';
+import { startWatcher, stopWatcher, restartWatcher } from '../native/watcher';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -33,9 +35,12 @@ function createWindow() {
 
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
-        mainWindow.webContents.openDevTools();
+        // DevTools can be opened manually with Cmd+Option+I
+        // mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+        // In production: __dirname is dist-electron/electron/
+        // index.html is in dist/
+        mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
     }
 
     mainWindow.on('closed', () => {
@@ -43,22 +48,114 @@ function createWindow() {
     });
 }
 
+// Set app name for dev environment immediately
+if (!app.isPackaged) {
+    app.setName('Sonexa');
+}
+
 app.whenReady().then(() => {
+    // Determine the correct path for the gold icon for the About panel
+    const aboutIconPath = getIconPath('Icon-macOS-Gold-1024x1024@1x.png');
+
+    // Configure About Panel
+    app.setAboutPanelOptions({
+        applicationName: 'Sonexa',
+        applicationVersion: app.getVersion(),
+        version: app.getVersion(),
+        copyright: 'Copyright © 2025 Sonexa Team',
+        credits: 'Sonexa is an Open Source Project',
+        website: 'https://github.com/sonexa/sonexa',
+        iconPath: aboutIconPath, // Set the gold icon
+    });
+
     // Initialize database
     initDatabase();
 
+    // Initialize sync queue
+    initSyncQueue();
+    resetStuckItems(); // Reset any items stuck from previous crash
+
+    // Initialize worker thread for off-main-thread processing
+    initWorker();
+
+    // Set initial dock icon
+    updateDockIcon();
+
     createWindow();
+
+    // Start file system watcher for library folder
+    startWatcher(mainWindow);
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow();
+            startWatcher(mainWindow);
         }
     });
 });
 
 app.on('window-all-closed', () => {
+    stopWatcher();
     if (process.platform !== 'darwin') {
         app.quit();
+    }
+});
+
+// ============================================
+// Theme & Dock Icon Logic
+// ============================================
+
+// Helper to get robust icon path
+function getIconPath(filename: string): string {
+    // In dev, we are in electron/main.ts (compiled to dist-electron/electron/main.js)
+    // We want to access public/logo/filename
+
+    if (app.isPackaged) {
+        // In production, resources are usually in resources/app.asar/ ... or unpacked.
+        // Assuming electron-builder copies public to resources or we access it from asar.
+        // Standard electron-builder puts 'extraResources' or 'files' in resources.
+        // But simply accessing __dirname + relative path inside ASAR often works for readFileSync,
+        // but dock.setIcon might expect an absolute path on disk.
+
+        // Strategy A: Try path from __dirname (inside asar) -> often resolves securely
+        return path.join(__dirname, '../public/logo', filename);
+    } else {
+        // In dev: dist-electron/electron/main.js -> ../../public/logo/filename
+        return path.join(__dirname, '../../public/logo', filename);
+    }
+}
+
+const ICONS = {
+    light: getIconPath('Icon-macOS-Default-1024x1024@1x.png'),
+    dark: getIconPath('Icon-macOS-Dark-1024x1024@1x.png'),
+};
+
+function updateDockIcon(theme?: 'light' | 'dark' | 'system') {
+    if (process.platform !== 'darwin') return;
+
+    const currentSettings = getSettings();
+    const mode = theme || currentSettings.theme || 'system';
+
+    let useDark = false;
+    if (mode === 'system') {
+        useDark = nativeTheme.shouldUseDarkColors;
+    } else {
+        useDark = mode === 'dark';
+    }
+
+    const iconPath = useDark ? ICONS.dark : ICONS.light;
+    try {
+        app.dock.setIcon(iconPath);
+    } catch (error) {
+        console.warn('Failed to set dock icon:', error);
+    }
+}
+
+// Update icon on theme change (system)
+nativeTheme.on('updated', () => {
+    const settings = getSettings();
+    if (settings.theme === 'system') {
+        updateDockIcon('system');
     }
 });
 
@@ -78,6 +175,9 @@ ipcMain.handle('get-settings', () => {
 
 ipcMain.handle('set-settings', (_event, settings: Partial<AppSettings>) => {
     setSettings(settings);
+    if (settings.theme) {
+        updateDockIcon(settings.theme);
+    }
     return { success: true };
 });
 
@@ -539,6 +639,131 @@ ipcMain.handle('full-sync', async () => {
     setSettings({ lastSyncAt: new Date().toISOString() });
 
     return { uploaded, downloaded, time: new Date().toISOString() };
+});
+
+// ============================================
+// Sync Queue Handlers
+// ============================================
+
+// Get sync queue statistics
+ipcMain.handle('get-sync-queue-stats', () => {
+    return getQueueStats();
+});
+
+// Process sync queue (called periodically or when coming online)
+ipcMain.handle('process-sync-queue', async () => {
+    const { uploadFile, downloadFile, deleteCloudFile, isSupabaseConfigured } = await import('../native/supabase');
+
+    if (!(await isSupabaseConfigured())) {
+        return { processed: 0, failed: 0, message: 'Supabase not configured' };
+    }
+
+    const pendingItems = getPendingItems(10);
+    let processed = 0;
+    let failed = 0;
+
+    for (const item of pendingItems) {
+        markProcessing(item.id);
+
+        try {
+            switch (item.operation) {
+                case 'upload': {
+                    const file = getFileById(item.file_id);
+                    if (!file) {
+                        markFailed(item.id, 'File not found in database');
+                        failed++;
+                        continue;
+                    }
+
+                    const result = await uploadFile(file.path, file.type, file.id);
+                    if (result) {
+                        updateFile(file.id, { cloud_url: result.url, cloud_id: result.path } as any);
+                        markCompleted(item.id);
+                        processed++;
+                    } else {
+                        markFailed(item.id, 'Upload returned no result');
+                        failed++;
+                    }
+                    break;
+                }
+
+                case 'download': {
+                    if (!item.storage_path) {
+                        markFailed(item.id, 'No storage path provided');
+                        failed++;
+                        continue;
+                    }
+
+                    const result = await downloadFile(item.storage_path, item.file_type);
+                    if (result) {
+                        const { getAudioMetadata } = await import('../native/storage');
+                        const metadata = await getAudioMetadata(result.localPath);
+
+                        insertFile({
+                            filename: result.filename,
+                            type: item.file_type,
+                            path: result.localPath,
+                            hash: metadata.hash,
+                            duration: metadata.duration,
+                            size: metadata.size,
+                            tags: '[]',
+                            bpm: null,
+                            favorite: 0,
+                            cloud_url: item.storage_path,
+                            cloud_id: item.storage_path,
+                        });
+
+                        markCompleted(item.id);
+                        processed++;
+                    } else {
+                        markFailed(item.id, 'Download returned no result');
+                        failed++;
+                    }
+                    break;
+                }
+
+                case 'delete': {
+                    if (!item.storage_path) {
+                        markFailed(item.id, 'No storage path provided');
+                        failed++;
+                        continue;
+                    }
+
+                    const success = await deleteCloudFile(item.storage_path);
+                    if (success) {
+                        markCompleted(item.id);
+                        processed++;
+                    } else {
+                        markFailed(item.id, 'Delete failed');
+                        failed++;
+                    }
+                    break;
+                }
+            }
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+            markFailed(item.id, errorMsg);
+            failed++;
+        }
+    }
+
+    return { processed, failed };
+});
+
+// Queue an upload operation (for offline use)
+ipcMain.handle('queue-upload', (_event, fileId: string, fileType: 'music' | 'sfx') => {
+    if (!isQueued(fileId, 'upload')) {
+        return queueSyncOperation('upload', fileId, fileType);
+    }
+    return { message: 'Already queued' };
+});
+
+// Queue a download operation (for offline use)
+ipcMain.handle('queue-download', (_event, storagePath: string, fileType: 'music' | 'sfx') => {
+    if (!isQueued(storagePath, 'download')) {
+        return queueSyncOperation('download', storagePath, fileType, storagePath);
+    }
+    return { message: 'Already queued' };
 });
 
 // Export mainWindow for menu access

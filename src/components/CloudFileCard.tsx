@@ -111,7 +111,7 @@ export default function CloudFileCard({
                     />
                     {/* Cloud overlay */}
                     <img
-                        src="/icons/cloud.png"
+                        src="./icons/cloud.png"
                         alt="Cloud"
                         className="absolute bottom-0 right-0 w-5 h-5"
                     />
@@ -183,7 +183,7 @@ export default function CloudFileCard({
                 />
                 {/* Cloud overlay */}
                 <img
-                    src="/icons/cloud.png"
+                    src="./icons/cloud.png"
                     alt="Cloud"
                     className="absolute -bottom-1 -right-1 w-4 h-4"
                 />

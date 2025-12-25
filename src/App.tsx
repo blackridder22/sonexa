@@ -5,12 +5,14 @@ import FileList from './components/FileList';
 import Player from './components/Player';
 import ToastContainer, { showToast, hideToast } from './components/Toast';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
+import Onboarding from './components/Onboarding';
 import { FileRecord } from './components/FileCard';
 
 function App() {
     const [appVersion, setAppVersion] = useState<string>('');
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null); // null = loading
     const [files, setFiles] = useState<FileRecord[]>([]);
     const [cloudFiles, setCloudFiles] = useState<CloudFile[]>([]);
     const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
@@ -92,15 +94,64 @@ function App() {
         if (window.sonexa) {
             window.sonexa.getAppVersion().then(setAppVersion).catch(console.error);
 
+            // Check if onboarding is complete
+            window.sonexa.getSettings().then(settings => {
+                setShowOnboarding(!settings.onboardingComplete);
+
+                // Apply theme
+                const theme = settings.theme || 'system';
+                const applyTheme = (t: string) => {
+                    if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                };
+
+                applyTheme(theme);
+
+                // Listen for system changes if system theme
+                if (theme === 'system') {
+                    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    const handleChange = () => {
+                        applyTheme('system');
+                    };
+                    mediaQuery.addEventListener('change', handleChange);
+                }
+            });
+
             // Listen for open-settings event from main process (CMD+,)
-            const unsubscribe = window.sonexa.onOpenSettings(() => {
+            const unsubscribeSettings = window.sonexa.onOpenSettings(() => {
                 setIsSettingsOpen(true);
             });
 
-            // Initial file load
+            // Listen for import-files-dialog event from main process (CMD+O)
+            const unsubscribeImport = window.sonexa.onImportFilesDialog(async () => {
+                try {
+                    const filePaths = await window.sonexa.chooseFiles();
+                    if (filePaths.length > 0) {
+                        await window.sonexa.importFiles(filePaths);
+                        loadFiles();
+                    }
+                } catch (error) {
+                    console.error('Import failed:', error);
+                }
+            });
+
+            // Listen for library updates from file system watcher
+            const unsubscribeLibrary = window.sonexa.onLibraryUpdated((data) => {
+                console.log('Library updated:', data);
+                loadFiles(); // Refresh file list when files added/removed externally
+            });
+
+            // Initial file load (only if onboarding complete)
             loadFiles();
 
-            return unsubscribe;
+            return () => {
+                unsubscribeSettings();
+                unsubscribeImport();
+                unsubscribeLibrary();
+            };
         }
     }, [loadFiles]);
 
@@ -307,19 +358,37 @@ function App() {
         setPlayingFile(null);
     };
 
+    // Handle onboarding complete
+    const handleOnboardingComplete = () => {
+        setShowOnboarding(false);
+        loadFiles();
+    };
+
+    // Loading state while checking onboarding
+    if (showOnboarding === null) {
+        return (
+            <div className="min-h-screen bg-sonexa-bg flex items-center justify-center">
+                <div className="animate-spin w-8 h-8 border-2 border-sonexa-primary border-t-transparent rounded-full" />
+            </div>
+        );
+    }
+
+    // Show onboarding if not complete
+    if (showOnboarding) {
+        return <Onboarding onComplete={handleOnboardingComplete} />;
+    }
+
     return (
-        <div className="min-h-screen bg-sonexa-dark text-white">
+        <div className="min-h-screen bg-sonexa-bg text-sonexa-text">
             {/* Draggable titlebar region for macOS */}
             <div className="h-12 w-full drag-region flex items-center justify-center border-b border-sonexa-border">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sonexa-primary to-sonexa-secondary flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">S</span>
-                    </div>
+                    <img src="./icons/Top-Logo-Gold.png" alt="Sonexa" className="w-8 h-8 object-contain" />
                     <h1 className="text-lg font-semibold tracking-tight">
                         Sonexa <span className="text-sonexa-primary">— Dev</span>
                     </h1>
                     {appVersion && (
-                        <span className="text-xs text-gray-500 ml-2">v{appVersion}</span>
+                        <span className="text-xs text-sonexa-text-muted ml-2">v{appVersion}</span>
                     )}
                 </div>
             </div>
@@ -335,7 +404,7 @@ function App() {
                 />
 
                 {/* File list */}
-                <div className="flex-1 bg-sonexa-dark overflow-hidden">
+                <div className="flex-1 bg-sonexa-bg overflow-hidden">
                     <FileList
                         files={files}
                         cloudFiles={cloudFiles}

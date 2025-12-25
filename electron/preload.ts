@@ -55,11 +55,24 @@ contextBridge.exposeInMainWorld('sonexa', {
         return () => ipcRenderer.removeListener('open-settings', callback);
     },
 
+    // Import files dialog event (CMD+O from menu)
+    onImportFilesDialog: (callback: () => void) => {
+        ipcRenderer.on('import-files-dialog', callback);
+        return () => ipcRenderer.removeListener('import-files-dialog', callback);
+    },
+
     // Import progress events
     onImportProgress: (callback: (progress: { current: number; total: number; filename: string }) => void) => {
         const handler = (_event: Electron.IpcRendererEvent, progress: { current: number; total: number; filename: string }) => callback(progress);
         ipcRenderer.on('import-progress', handler);
         return () => ipcRenderer.removeListener('import-progress', handler);
+    },
+
+    // Library updated events (from file system watcher)
+    onLibraryUpdated: (callback: (data: { type: 'add' | 'remove'; file?: any; path?: string }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, data: { type: 'add' | 'remove'; file?: any; path?: string }) => callback(data);
+        ipcRenderer.on('library-updated', handler);
+        return () => ipcRenderer.removeListener('library-updated', handler);
     },
 
     // Settings (electron-store)
@@ -139,7 +152,9 @@ declare global {
         sonexa: {
             getAppVersion: () => Promise<string>;
             onOpenSettings: (callback: () => void) => () => void;
+            onImportFilesDialog: (callback: () => void) => () => void;
             onImportProgress: (callback: (progress: { current: number; total: number; filename: string }) => void) => () => void;
+            onLibraryUpdated: (callback: (data: { type: 'add' | 'remove'; file?: any; path?: string }) => void) => () => void;
             getSettings: () => Promise<AppSettings>;
             setSettings: (settings: Partial<AppSettings>) => Promise<{ success: boolean }>;
             getSecret: (key: string) => Promise<string | null>;

@@ -27,6 +27,8 @@ interface AppSettings {
     supabaseUrl: string;
     autoSync: boolean;
     lastSyncAt: string | null;
+    theme: 'light' | 'dark' | 'system';
+    onboardingComplete: boolean;
 }
 
 // Import result interface
@@ -51,7 +53,9 @@ interface Window {
 
         // Settings events
         onOpenSettings: (callback: () => void) => () => void;
+        onImportFilesDialog: (callback: () => void) => () => void;
         onImportProgress: (callback: (progress: { current: number; total: number; filename: string }) => void) => () => void;
+        onLibraryUpdated: (callback: (data: { type: 'add' | 'remove'; file?: any; path?: string }) => void) => () => void;
 
         // Settings (electron-store)
         getSettings: () => Promise<AppSettings>;

@@ -104,10 +104,10 @@ export default function FileList({
     if (isCloudTab) {
         if (cloudFiles.length === 0) {
             return (
-                <div className="h-full flex flex-col items-center justify-center text-gray-500 p-6">
-                    <img src="/icons/cloud.png" alt="Cloud" className="w-20 h-20 opacity-30 mb-4" />
+                <div className="h-full flex flex-col items-center justify-center text-sonexa-text-muted p-6">
+                    <img src="./icons/cloud.png" alt="Cloud" className="w-20 h-20 opacity-30 mb-4" />
                     <p className="text-lg font-medium">All synced!</p>
-                    <p className="text-sm text-gray-600">All cloud files are downloaded locally</p>
+                    <p className="text-sm text-sonexa-text-muted">All cloud files are downloaded locally</p>
                 </div>
             );
         }
@@ -140,15 +140,15 @@ export default function FileList({
         >
             {/* Drag overlay - only for non-cloud tabs */}
             {!isCloudTab && isDraggingOver && (
-                <div className="absolute inset-0 z-50 bg-sonexa-dark/90 backdrop-blur-sm flex items-center justify-center rounded-lg pointer-events-none">
+                <div className="absolute inset-0 z-50 bg-sonexa-bg/90 backdrop-blur-sm flex items-center justify-center rounded-lg pointer-events-none">
                     <div className="text-center">
                         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-sonexa-primary/20 flex items-center justify-center">
                             <svg className="w-10 h-10 text-sonexa-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
                         </div>
-                        <p className="text-xl font-semibold text-white">Drop files to import</p>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-xl font-semibold text-sonexa-text">Drop files to import</p>
+                        <p className="text-sm text-sonexa-text-muted mt-1">
                             {forceType ? `Will be added as ${forceType.toUpperCase()}` : 'Auto-detect type'}
                         </p>
                     </div>
@@ -186,7 +186,7 @@ export default function FileList({
                     {(files.length > 0 || cloudFiles.length > 0) && (
                         <button
                             onClick={onSelectAll}
-                            className="px-3 py-2 rounded-lg bg-sonexa-surface text-gray-400 hover:text-white transition-colors"
+                            className="px-3 py-2 rounded-lg bg-sonexa-surface text-sonexa-text-muted hover:text-sonexa-text transition-colors"
                             title="Select all"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,7 +212,7 @@ export default function FileList({
                     {selectedFiles.length > 0 && selectedCloudFiles.length > 0 && (
                         <button
                             onClick={onDeselectLocal}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sonexa-surface text-gray-400 hover:text-white transition-colors text-xs"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sonexa-surface text-sonexa-text-muted hover:text-sonexa-text transition-colors text-xs"
                             title="Deselect local files"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -255,7 +255,7 @@ export default function FileList({
                     {/* View mode buttons */}
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-sonexa-surface text-white' : 'text-gray-500 hover:text-white'}`}
+                        className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-sonexa-surface hover:text-sonexa-text text-sonexa-text' : 'text-sonexa-text-muted hover:text-sonexa-text'}`}
                         title="List view"
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -264,7 +264,7 @@ export default function FileList({
                     </button>
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-sonexa-surface text-white' : 'text-gray-500 hover:text-white'}`}
+                        className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-sonexa-surface hover:text-sonexa-text text-sonexa-text' : 'text-sonexa-text-muted hover:text-sonexa-text'}`}
                         title="Grid view"
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,8 +290,8 @@ export default function FileList({
                             />
                         ))
                     ) : (
-                        <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
-                            <img src="/icons/cloud.png" alt="Cloud" className="w-16 h-16 opacity-30 mb-4" />
+                        <div className="col-span-full flex flex-col items-center justify-center py-12 text-sonexa-text-muted">
+                            <img src="./icons/cloud.png" alt="Cloud" className="w-16 h-16 opacity-30 mb-4" />
                             <p className="text-lg font-medium">All caught up!</p>
                             <p className="text-sm">All cloud files are downloaded locally</p>
                         </div>
@@ -317,10 +317,10 @@ export default function FileList({
                             <>
                                 {/* Separator */}
                                 {viewMode === 'list' && files.length > 0 && (
-                                    <div className="flex items-center gap-3 py-3 text-gray-500">
+                                    <div className="flex items-center gap-3 py-3 text-sonexa-text-muted">
                                         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
                                         <span className="text-xs flex items-center gap-2">
-                                            <img src="/icons/cloud.png" alt="" className="w-4 h-4 opacity-50" />
+                                            <img src="./icons/cloud.png" alt="" className="w-4 h-4 opacity-50" />
                                             Cloud Only
                                         </span>
                                         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />

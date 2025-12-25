@@ -110,7 +110,7 @@ export default function DeleteConfirmModal({
                                             <p className="font-medium text-white">Cloud files</p>
                                             <p className="text-xs text-gray-500">Remove from Supabase storage</p>
                                         </div>
-                                        <img src="/icons/cloud.png" alt="" className="w-5 h-5 opacity-50" />
+                                        <img src="./icons/cloud.png" alt="" className="w-5 h-5 opacity-50" />
                                     </div>
                                 </label>
                             )}

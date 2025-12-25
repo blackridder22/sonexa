@@ -5,6 +5,8 @@ export interface AppSettings {
     supabaseUrl: string;
     autoSync: boolean;
     lastSyncAt: string | null;
+    theme: 'light' | 'dark' | 'system';
+    onboardingComplete: boolean;
 }
 
 const defaults: AppSettings = {
@@ -12,6 +14,8 @@ const defaults: AppSettings = {
     supabaseUrl: '',
     autoSync: false,
     lastSyncAt: null,
+    theme: 'system',
+    onboardingComplete: false,
 };
 
 const store = new Store<AppSettings>({
@@ -25,6 +29,8 @@ export function getSettings(): AppSettings {
         supabaseUrl: store.get('supabaseUrl'),
         autoSync: store.get('autoSync'),
         lastSyncAt: store.get('lastSyncAt'),
+        theme: store.get('theme'),
+        onboardingComplete: store.get('onboardingComplete'),
     };
 }
 
@@ -40,6 +46,12 @@ export function setSettings(settings: Partial<AppSettings>): void {
     }
     if (settings.lastSyncAt !== undefined) {
         store.set('lastSyncAt', settings.lastSyncAt);
+    }
+    if (settings.theme !== undefined) {
+        store.set('theme', settings.theme);
+    }
+    if (settings.onboardingComplete !== undefined) {
+        store.set('onboardingComplete', settings.onboardingComplete);
     }
 }
 

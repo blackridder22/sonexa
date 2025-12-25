@@ -165,7 +165,7 @@ export default function Player({ file, onClose }: PlayerProps) {
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-sonexa-surface/95 backdrop-blur-xl border-t border-sonexa-border z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-sonexa-surface/95 backdrop-blur-xl border-t border-sonexa-border z-40 text-sonexa-text">
             {/* Progress bar at top of player */}
             <div
                 className="h-1 bg-sonexa-border cursor-pointer group"
@@ -201,8 +201,8 @@ export default function Player({ file, onClose }: PlayerProps) {
 
                     {/* Title and time */}
                     <div className="min-w-0">
-                        <h3 className="font-medium text-white truncate">{file.filename}</h3>
-                        <p className="text-xs text-gray-500">
+                        <h3 className="font-medium text-sonexa-text truncate">{file.filename}</h3>
+                        <p className="text-xs text-sonexa-text-muted">
                             {formatTime(currentTime)} / {formatTime(duration)}
                         </p>
                     </div>
@@ -213,7 +213,7 @@ export default function Player({ file, onClose }: PlayerProps) {
                     {/* Stop */}
                     <button
                         onClick={stop}
-                        className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-sonexa-border transition-colors"
+                        className="p-2 rounded-lg text-sonexa-text-muted hover:text-sonexa-text hover:bg-sonexa-surface-hover transition-colors"
                         title="Stop"
                     >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -242,8 +242,8 @@ export default function Player({ file, onClose }: PlayerProps) {
                     <button
                         onClick={() => setIsLooping(!isLooping)}
                         className={`p-2 rounded-lg transition-colors ${isLooping
-                                ? 'text-sonexa-primary bg-sonexa-primary/20'
-                                : 'text-gray-400 hover:text-white hover:bg-sonexa-border'
+                            ? 'text-sonexa-primary bg-sonexa-primary/20'
+                            : 'text-sonexa-text-muted hover:text-sonexa-text hover:bg-sonexa-surface-hover'
                             }`}
                         title={isLooping ? 'Loop On' : 'Loop Off'}
                     >
@@ -255,7 +255,7 @@ export default function Player({ file, onClose }: PlayerProps) {
 
                 {/* Volume */}
                 <div className="flex items-center gap-2 w-32">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-sonexa-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 6l-4 4H4v4h4l4 4V6z" />
                     </svg>
                     <input
@@ -265,7 +265,7 @@ export default function Player({ file, onClose }: PlayerProps) {
                         step="0.01"
                         value={volume}
                         onChange={(e) => setVolume(parseFloat(e.target.value))}
-                        className="flex-1 h-1 bg-sonexa-border rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+                        className="flex-1 h-1 bg-sonexa-border rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-sonexa-text [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
                     />
                 </div>
 
@@ -275,7 +275,7 @@ export default function Player({ file, onClose }: PlayerProps) {
                         stop();
                         onClose?.();
                     }}
-                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-sonexa-border transition-colors"
+                    className="p-2 rounded-lg text-sonexa-text-muted hover:text-sonexa-text hover:bg-sonexa-surface-hover transition-colors"
                     title="Close"
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

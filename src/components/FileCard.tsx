@@ -85,7 +85,7 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                     relative p-4 rounded-xl transition-all duration-200 cursor-pointer group
                     ${isSelected
                         ? 'bg-sonexa-primary/20 ring-2 ring-sonexa-primary'
-                        : 'bg-sonexa-surface/50 hover:bg-sonexa-surface'
+                        : 'bg-sonexa-surface/50 hover:bg-sonexa-surface-hover'
                     }
                 `}
             >
@@ -101,7 +101,7 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                         w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors
                         ${isSelected
                             ? 'bg-sonexa-primary border-sonexa-primary'
-                            : 'border-gray-500 hover:border-sonexa-primary'
+                            : 'border-sonexa-text-muted hover:border-sonexa-primary'
                         }
                     `}>
                         {isSelected && (
@@ -117,7 +117,7 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                     onClick={handleToggleFavorite}
                     className={`absolute top-2 right-2 z-10 p-1 rounded-full transition-all ${file.favorite === 1
                         ? 'text-yellow-500'
-                        : 'text-gray-600 opacity-0 group-hover:opacity-100 hover:text-yellow-500'
+                        : 'text-sonexa-text-muted opacity-0 group-hover:opacity-100 hover:text-yellow-500'
                         }`}
                 >
                     <svg className="w-4 h-4" fill={file.favorite === 1 ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
@@ -153,8 +153,8 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                 </div>
 
                 {/* Info */}
-                <h3 className="font-medium text-sm text-center truncate text-white">{file.filename}</h3>
-                <p className="text-xs text-center text-gray-500 mt-1">
+                <h3 className="font-medium text-sm text-center truncate text-sonexa-text">{file.filename}</h3>
+                <p className="text-xs text-center text-sonexa-text-muted mt-1">
                     {file.duration > 0 ? formatDuration(file.duration) : '--:--'} • {formatSize(file.size)}
                 </p>
             </div>
@@ -172,7 +172,7 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                 flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer group
                 ${isSelected
                     ? 'bg-sonexa-primary/20 ring-1 ring-sonexa-primary/50'
-                    : 'bg-sonexa-surface/50 hover:bg-sonexa-surface'
+                    : 'bg-sonexa-surface/50 hover:bg-sonexa-surface-hover'
                 }
             `}
         >
@@ -188,7 +188,7 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                     w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors
                     ${isSelected
                         ? 'bg-sonexa-primary border-sonexa-primary'
-                        : 'border-gray-500 hover:border-sonexa-primary'
+                        : 'border-sonexa-text-muted hover:border-sonexa-primary'
                     }
                 `}>
                     {isSelected && (
@@ -217,10 +217,10 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
 
             {/* File info */}
             <div className="flex-1 min-w-0">
-                <h3 className="font-medium truncate text-white group-hover:text-sonexa-primary transition-colors">
+                <h3 className="font-medium truncate text-sonexa-text group-hover:text-sonexa-primary transition-colors">
                     {file.filename}
                 </h3>
-                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                <div className="flex items-center gap-3 mt-1 text-xs text-sonexa-text-muted">
                     <span>{file.duration > 0 ? formatDuration(file.duration) : '--:--'}</span>
                     <span>•</span>
                     <span>{formatSize(file.size)}</span>
@@ -238,7 +238,7 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                 onClick={handleToggleFavorite}
                 className={`p-2 rounded-lg transition-all ${file.favorite === 1
                     ? 'text-yellow-500'
-                    : 'text-gray-600 opacity-0 group-hover:opacity-100 hover:text-yellow-500'
+                    : 'text-sonexa-text-muted opacity-0 group-hover:opacity-100 hover:text-yellow-500'
                     }`}
             >
                 <svg className="w-5 h-5" fill={file.favorite === 1 ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
@@ -252,7 +252,7 @@ export default function FileCard({ file, isSelected, onSelect, onPlay, onToggleF
                 disabled={isSynced}
                 className={`p-2 rounded-lg transition-all ${isSynced
                     ? 'text-green-500'
-                    : 'text-gray-600 opacity-0 group-hover:opacity-100 hover:text-blue-500'
+                    : 'text-sonexa-text-muted opacity-0 group-hover:opacity-100 hover:text-blue-500'
                     }`}
                 title={isSynced ? 'Synced to cloud' : 'Upload to cloud'}
             >

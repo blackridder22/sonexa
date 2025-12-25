@@ -129,7 +129,7 @@ export default function Sidebar({ activeTab, onTabChange, counts, onSyncComplete
     return (
         <div
             className={`
-                h-full bg-sonexa-darker border-r border-sonexa-border flex flex-col
+                h-full bg-sonexa-surface border-r border-sonexa-border flex flex-col
                 transition-all duration-300 ease-in-out
                 ${isCollapsed ? 'w-16' : 'w-64'}
             `}
@@ -138,7 +138,7 @@ export default function Sidebar({ activeTab, onTabChange, counts, onSyncComplete
             <div className="p-3 flex justify-end">
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-sonexa-surface transition-colors"
+                    className="p-2 rounded-lg text-sonexa-text-muted hover:text-sonexa-text hover:bg-sonexa-surface-hover transition-colors"
                     title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
                     <svg
@@ -165,8 +165,8 @@ export default function Sidebar({ activeTab, onTabChange, counts, onSyncComplete
                             className={`
                                 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                                 ${isActive
-                                    ? 'bg-sonexa-primary/20 text-white'
-                                    : 'text-gray-400 hover:bg-sonexa-surface hover:text-white'
+                                    ? 'bg-sonexa-primary/20 text-sonexa-text'
+                                    : 'text-sonexa-text-muted hover:bg-sonexa-surface-hover hover:text-sonexa-text'
                                 }
                                 ${isCollapsed ? 'justify-center' : ''}
                             `}
@@ -188,7 +188,7 @@ export default function Sidebar({ activeTab, onTabChange, counts, onSyncComplete
                                     <span className="flex-1 text-left font-medium">{item.label}</span>
                                     <span className={`
                                         text-xs px-2 py-0.5 rounded-full
-                                        ${isActive ? 'bg-sonexa-primary/30 text-sonexa-primary' : 'bg-sonexa-surface text-gray-500'}
+                                        ${isActive ? 'bg-sonexa-primary/30 text-sonexa-primary' : 'bg-sonexa-bg text-sonexa-text-muted'}
                                     `}>
                                         {count}
                                     </span>
@@ -208,7 +208,7 @@ export default function Sidebar({ activeTab, onTabChange, counts, onSyncComplete
                         w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                         ${totalNeeded > 0
                             ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
-                            : 'text-gray-600 cursor-not-allowed'
+                            : 'text-sonexa-text-muted cursor-not-allowed'
                         }
                         ${isCollapsed ? 'justify-center' : ''}
                     `}
@@ -249,12 +249,12 @@ export default function Sidebar({ activeTab, onTabChange, counts, onSyncComplete
             {!isCollapsed && (
                 <div className="p-4 border-t border-sonexa-border space-y-2">
                     {lastSyncTime && (
-                        <p className="text-xs text-gray-600 text-center">
+                        <p className="text-xs text-sonexa-text-muted text-center">
                             Last sync: {formatTimeAgo(lastSyncTime)}
                         </p>
                     )}
-                    <p className="text-xs text-gray-600 text-center">
-                        Press <kbd className="px-1.5 py-0.5 bg-sonexa-surface rounded text-gray-400">⌘,</kbd> for settings
+                    <p className="text-xs text-sonexa-text-muted text-center">
+                        Press <kbd className="px-1.5 py-0.5 bg-sonexa-surface-hover rounded text-sonexa-text-muted">⌘,</kbd> for settings
                     </p>
                 </div>
             )}

@@ -4,16 +4,26 @@ module.exports = {
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
+    darkMode: 'class',
     theme: {
         extend: {
             colors: {
                 sonexa: {
-                    primary: '#6366f1',
-                    secondary: '#8b5cf6',
-                    dark: '#0f0f23',
-                    darker: '#09091a',
-                    surface: '#1a1a2e',
-                    border: '#2d2d44',
+                    primary: 'var(--color-primary)',
+                    secondary: 'var(--color-secondary)',
+                    // Semantic tokens
+                    bg: 'var(--color-bg)',
+                    text: 'var(--color-text)',
+                    'text-muted': 'var(--color-text-muted)',
+                    surface: 'var(--color-surface)',
+                    'surface-hover': 'var(--color-surface-hover)',
+                    border: 'var(--color-border)',
+                    input: 'var(--color-input)',
+                    ring: 'var(--color-ring)',
+
+                    // Legacy mappings (for backward compatibility if needed, but we should migrate)
+                    dark: 'var(--color-bg)',
+                    darker: 'var(--color-surface)',
                 }
             },
             fontFamily: {

@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 
 // Settings interface matching the electron-store schema
-interface AppSettings {
-    localLibraryPath: string;
-    supabaseUrl: string;
-    autoSync: boolean;
-    lastSyncAt: string | null;
-}
+// (Using global AppSettings from vite-env.d.ts)
 
 // Secret key constants
 const SUPABASE_KEY = 'supabase-key';
@@ -21,6 +16,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [supabaseKey, setSupabaseKey] = useState('');
     const [localLibraryPath, setLocalLibraryPath] = useState('~/SonexaLibrary');
     const [autoSync, setAutoSync] = useState(false);
+    const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -36,6 +32,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     setSupabaseUrl(settings.supabaseUrl || '');
                     setLocalLibraryPath(settings.localLibraryPath || '~/SonexaLibrary');
                     setAutoSync(settings.autoSync || false);
+                    setTheme(settings.theme || 'system');
                     // Don't show actual key, just indicate if one exists
                     setSupabaseKey(secretKey ? '••••••••••••••••' : '');
                 })
@@ -56,7 +53,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 supabaseUrl,
                 localLibraryPath,
                 autoSync,
+                theme,
             });
+
+            // Apply theme immediately
+            const applyTheme = (t: string) => {
+                if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            };
+            applyTheme(theme);
 
             // Save secret key if it was changed (not the placeholder)
             if (supabaseKey && !supabaseKey.startsWith('••')) {
@@ -148,13 +156,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     value={supabaseUrl}
                                     onChange={(e) => setSupabaseUrl(e.target.value)}
                                     placeholder="https://your-project.supabase.co"
-                                    className="w-full px-4 py-2.5 bg-sonexa-dark border border-sonexa-border rounded-lg text-white placeholder-gray-500 focus:border-sonexa-primary focus:ring-1 focus:ring-sonexa-primary transition-colors"
+                                    className="w-full px-4 py-2.5 bg-sonexa-input border border-sonexa-border rounded-lg text-sonexa-text placeholder-sonexa-text-muted focus:border-sonexa-primary focus:ring-1 focus:ring-sonexa-primary transition-colors"
                                 />
                             </div>
 
                             {/* Supabase Key */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-sonexa-text-muted mb-2">
                                     Supabase API Key
                                 </label>
                                 <input
@@ -162,16 +170,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     value={supabaseKey}
                                     onChange={(e) => setSupabaseKey(e.target.value)}
                                     placeholder="Your service or anon key"
-                                    className="w-full px-4 py-2.5 bg-sonexa-dark border border-sonexa-border rounded-lg text-white placeholder-gray-500 focus:border-sonexa-primary focus:ring-1 focus:ring-sonexa-primary transition-colors"
+                                    className="w-full px-4 py-2.5 bg-sonexa-bg border border-sonexa-border rounded-lg text-sonexa-text placeholder-sonexa-text-muted focus:border-sonexa-primary focus:ring-1 focus:ring-sonexa-primary transition-colors"
                                 />
-                                <p className="mt-1.5 text-xs text-gray-500">
+                                <p className="mt-1.5 text-xs text-sonexa-text-muted">
                                     🔐 Stored securely in your system keychain (keytar)
                                 </p>
                             </div>
 
                             {/* Local Library Path */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-sonexa-text-muted mb-2">
                                     Local Library Path
                                 </label>
                                 <div className="flex gap-2">
@@ -180,11 +188,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                         value={localLibraryPath}
                                         onChange={(e) => setLocalLibraryPath(e.target.value)}
                                         placeholder="~/SonexaLibrary"
-                                        className="flex-1 px-4 py-2.5 bg-sonexa-dark border border-sonexa-border rounded-lg text-white placeholder-gray-500 focus:border-sonexa-primary focus:ring-1 focus:ring-sonexa-primary transition-colors"
+                                        className="flex-1 px-4 py-2.5 bg-sonexa-bg border border-sonexa-border rounded-lg text-sonexa-text placeholder-sonexa-text-muted focus:border-sonexa-primary focus:ring-1 focus:ring-sonexa-primary transition-colors"
                                     />
                                     <button
                                         onClick={handleBrowse}
-                                        className="px-4 py-2.5 bg-sonexa-dark border border-sonexa-border rounded-lg hover:bg-sonexa-border transition-colors"
+                                        className="px-4 py-2.5 bg-sonexa-bg border border-sonexa-border rounded-lg hover:bg-sonexa-surface hover:text-sonexa-text transition-colors text-sonexa-text"
                                     >
                                         Browse
                                     </button>
@@ -194,10 +202,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             {/* Auto-sync Toggle */}
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300">
+                                    <label className="block text-sm font-medium text-sonexa-text-muted">
                                         Auto-sync
                                     </label>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-sonexa-text-muted">
                                         Automatically sync files with Supabase
                                     </p>
                                 </div>
@@ -211,6 +219,30 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                             }`}
                                     />
                                 </button>
+                            </div>
+
+                            {/* Theme Selector */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Appearace & Dock Icon
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {(['light', 'dark', 'system'] as const).map((mode) => (
+                                        <button
+                                            key={mode}
+                                            onClick={() => setTheme(mode)}
+                                            className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors capitalized ${theme === mode
+                                                ? 'bg-sonexa-primary border-sonexa-primary text-white'
+                                                : 'bg-sonexa-bg border-sonexa-border text-sonexa-text-muted hover:border-sonexa-text-muted hover:text-sonexa-text'
+                                                }`}
+                                        >
+                                            {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="mt-1.5 text-xs text-sonexa-text-muted">
+                                    Changes the MacOS Dock icon to match the selected theme.
+                                </p>
                             </div>
 
                             {/* Danger Zone */}

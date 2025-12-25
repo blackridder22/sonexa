@@ -3,9 +3,120 @@ import path from 'path';
 import crypto from 'crypto';
 import { promisify } from 'util';
 import { exec } from 'child_process';
+import { Worker } from 'worker_threads';
 import { getSetting } from '../electron/settings';
 
 const execAsync = promisify(exec);
+
+// Worker thread pool for off-main-thread processing
+let worker: Worker | null = null;
+let workerReady = false;
+const pendingTasks = new Map<string, { resolve: (value: any) => void; reject: (err: Error) => void }>();
+let taskIdCounter = 0;
+
+/**
+ * Initialize the worker thread
+ */
+export function initWorker(): void {
+    if (worker) return;
+
+    try {
+        // Worker path - compiled JS will be in dist-electron/native/worker.js
+        const workerPath = path.join(__dirname, 'worker.js');
+
+        if (!fs.existsSync(workerPath)) {
+            console.warn('[Storage] Worker file not found, using main thread for processing');
+            return;
+        }
+
+        worker = new Worker(workerPath);
+
+        worker.on('message', (msg) => {
+            if (msg.type === 'ready') {
+                workerReady = true;
+                console.log('[Storage] Worker thread ready');
+                return;
+            }
+
+            const { taskId, success, error, ...result } = msg;
+            const pending = pendingTasks.get(taskId);
+
+            if (pending) {
+                pendingTasks.delete(taskId);
+                if (success) {
+                    pending.resolve(result);
+                } else {
+                    pending.reject(new Error(error || 'Worker task failed'));
+                }
+            }
+        });
+
+        worker.on('error', (err) => {
+            console.error('[Storage] Worker error:', err);
+            // Reject all pending tasks
+            for (const [taskId, pending] of pendingTasks) {
+                pending.reject(err);
+                pendingTasks.delete(taskId);
+            }
+        });
+
+        worker.on('exit', (code) => {
+            console.log('[Storage] Worker exited with code:', code);
+            worker = null;
+            workerReady = false;
+        });
+    } catch (err) {
+        console.warn('[Storage] Failed to initialize worker:', err);
+    }
+}
+
+/**
+ * Process file using worker thread (with fallback to main thread)
+ */
+async function processWithWorker<T>(type: 'hash' | 'metadata' | 'full', filePath: string): Promise<T> {
+    // Fall back to main thread if worker not available
+    if (!worker || !workerReady) {
+        if (type === 'hash') {
+            return calculateFileHash(filePath) as Promise<T>;
+        } else if (type === 'metadata') {
+            const [duration, size] = await Promise.all([
+                getAudioDuration(filePath),
+                Promise.resolve(getFileSize(filePath)),
+            ]);
+            return { duration, size } as T;
+        } else {
+            // full
+            const [hash, duration] = await Promise.all([
+                calculateFileHash(filePath),
+                getAudioDuration(filePath),
+            ]);
+            return { hash, duration, size: getFileSize(filePath) } as T;
+        }
+    }
+
+    const taskId = `task-${++taskIdCounter}`;
+
+    return new Promise<T>((resolve, reject) => {
+        pendingTasks.set(taskId, { resolve, reject });
+        worker!.postMessage({ type, filePath, taskId });
+
+        // Timeout after 60 seconds
+        setTimeout(() => {
+            if (pendingTasks.has(taskId)) {
+                pendingTasks.delete(taskId);
+                reject(new Error('Worker task timeout'));
+            }
+        }, 60000);
+    });
+}
+
+/**
+ * Get audio metadata using worker thread (recommended for large imports)
+ */
+export async function getAudioMetadataAsync(filePath: string): Promise<AudioMetadata> {
+    return processWithWorker<AudioMetadata>('full', filePath);
+}
+
 
 // Supported audio extensions
 const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.aiff', '.aif', '.flac', '.ogg', '.m4a', '.wma'];
